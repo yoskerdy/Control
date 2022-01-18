@@ -1,0 +1,404 @@
+float rayon=100;
+float vo=20; //vitesse ecoulement (longueur vecteurs)
+float angle;
+float r;
+float vr;
+float vteta;
+float vx;                                                                        
+float vy;
+
+float teta1;
+float r1;
+float vr1;
+float vteta1;
+float vx1;
+float vy1;                                                       //50 variables
+
+float v;
+
+float x;
+float y;
+
+float dep=-500; //Emplacement de départ
+float vitesse=5; //Vitesse de déplacement
+
+float profil;
+float p;
+
+float curseurY=25*height/30+height/10-1;
+float couleur;
+int ok = 0;
+
+
+
+
+float t=0;
+float a;
+float teta=0;              //Déclaration des variables
+float phi=0;
+float tetapoint=0;
+float alpha=0;
+
+
+
+
+
+float Xpos;
+float Ypos;
+
+FloatList positionsX;
+FloatList positionsY;
+FloatList vitesseX;
+FloatList vitesseY;
+FloatList couleurs;
+
+int nb=0;
+
+int ecart=500; //Ecart entre chaque colonne
+
+int colones=200; //Nombre de colones
+
+int lignes=50; //Nombre de lignes
+
+float Xposbase=0;
+float Yposbase=1080/lignes;
+
+float coef=70*rayon; //Coefficient de déformation
+float ajust=-15; //Coefficient miroir
+float c1=0.5; //Coefficient de forme1
+float c2=0.5; //Coefficient de forme2
+float c3=3; //Coefficient d'hometétie X
+float c4=3; //Coefficient d'homotétieY
+
+float rotation=0;
+
+
+
+
+
+
+
+
+
+
+
+
+void setup(){
+  background(200);         //Paramétrage plein écran
+  fullScreen();
+  curseurY=25*height/30+height/10-1;
+  
+  float Xposbase=width/4;
+  float Yposbase=1080/lignes;
+
+  
+  
+  positionsX = new FloatList();
+  positionsY = new FloatList();
+  vitesseX = new FloatList();
+  vitesseY = new FloatList();
+  
+  couleurs = new FloatList();
+  
+  for(int u=1;u<=lignes;u+=1){
+  positionsX.append(Xposbase);
+  positionsY.append(u*Yposbase);
+  couleurs.append(0.0);
+  }
+  
+}
+
+void draw(){
+  background(200);
+  strokeWeight(2);
+  fill(255);
+  
+  pushMatrix();
+  translate(width/2, height/2);        //Assiette voulue
+  rotate(t);
+  fill(0,0,255);
+  strokeWeight(3);
+  textSize(40);
+  text("____",width/4,0);
+  popMatrix();
+  
+  if(abs(teta-t)>0){
+    tetapoint=0.05;
+}
+
+    if(teta>t && cos(alpha-teta)>0.9702){
+      teta=teta-tetapoint*(1-cos(abs(teta-t)))*2*pow(cos(teta-alpha),50);
+    }
+    if(teta<t && cos(alpha-teta)>0.9702){
+      teta=teta+tetapoint*(1-cos(abs(teta-t)))*2*pow(cos(teta-alpha),50);
+    }
+    
+          
+  pushMatrix();
+  translate(width/2, height/2);             //Profil D'aile
+  rotate(teta);
+  
+  for(float p=0; p<2*PI ; p=p+(2*PI)/1000){
+    stroke(0);
+    strokeWeight(2);
+    x = rayon*cos(p)-ajust;
+    y = rayon*sin(p)+ajust;
+    
+    if(x*x+y*y!=0){
+    x=0.5*( (x*x*x+2*x*y*y-y*y*x+coef*x)/(x*x+y*y) );
+    y=0.5*( (2*x*x*y+y*y*y-x*x*y-coef*y)/(x*x+y*y) );
+    x = 3*x;
+    y = 3*y;
+    profil = sqrt(x*x+y*y);
+    }
+
+    point(x,y);
+  }
+  
+  line(263,0,350,0);
+  pushMatrix();
+  translate(-250,0);
+  
+  
+  if(cos(alpha-teta)>=0.9702){
+    phi=((teta-t)/abs(teta-t))*4*(1-cos(teta-t));
+  }
+  
+  
+  rotate(phi);                 //Volet
+  fill(200);
+  ellipse(-25,0,50,10);
+  popMatrix();
+  
+  popMatrix();
+  
+  
+  pushMatrix();
+    
+  if(alpha<teta){
+  alpha+=0.001;                //Incidence (direction de la vitesse aérodynamique)
+  }
+  if(alpha>teta){
+  alpha-=0.001;
+  }
+  
+  
+  translate(width/2, height/2);
+  rotate(alpha);
+  translate(-width/2,-height/2);
+  
+  
+  
+  if(ok==1){
+    
+    
+    
+    
+    
+    for(int i=0;i<lignes;i+=1){
+                                                   //Premiers points d'écoulement
+    Xpos = positionsX.get(i+nb);
+    Ypos = positionsY.get(i+nb);
+    
+    r1 = sqrt(pow(Xpos-width/2,2)+pow(Ypos-height/2,2));
+    teta1=acos((Xpos-width/2)/r1);
+    if(Ypos>height/2){
+    teta1=2*radians(180)-teta1;
+    }
+    
+    vr1 = vo*cos(teta1)*(1-((rayon*rayon)/(r1*r1)));
+    vteta1 = vo*sin(teta1)*(1+((rayon*rayon)/(r1*r1)));
+    vx1 = vr1*cos(teta1)+vteta1*sin(teta1);
+    vy1 = -vr1*sin(teta1)+vteta1*cos(teta1);
+    
+    Xpos = Xpos+vx1/10;
+    Ypos = Ypos+vy1/10;
+    
+    
+    if(Xpos>width){
+      Xpos=Xpos-width;
+    }
+    
+    v=sqrt(vx1*vx1+vy1*vy1);
+    
+    
+    
+    stroke(couleurs.get(i+nb),0,0);
+    strokeWeight(5);
+    //point(Xpos,Ypos);
+    
+    couleurs.append(exp(v)/pow(v,8));
+    positionsX.append(Xpos);
+    positionsY.append(Ypos);
+    vitesseX.append(vx1);
+    vitesseY.append(vy1);
+  }
+    
+    
+    
+    
+    
+    
+    
+    
+  for(int k=1;k<colones;k+=1){
+    
+  if(nb>=k*ecart){
+    for(int i=0;i<lignes;i+=1){
+    
+    Xpos = positionsX.get(i+nb-k*ecart)+ajust-width/2;//-400;
+    Ypos = positionsY.get(i+nb-k*ecart)+ajust-height/2;//-167;
+    
+    Xpos = cos(rotation)*Xpos+sin(rotation)*Ypos;
+    Ypos = -sin(rotation)*Xpos+cos(rotation)*Ypos;
+    
+    if(Xpos*Xpos+Ypos*Ypos!=0){
+    Xpos=c1*( (Xpos*Xpos*Xpos+2*Xpos*Ypos*Ypos-Ypos*Ypos*Xpos+coef*Xpos)/(Xpos*Xpos+Ypos*Ypos) );               //Transformation de Joukowski
+    Ypos=c2*( (2*Xpos*Xpos*Ypos+Ypos*Ypos*Ypos-Xpos*Xpos*Ypos-coef*Ypos)/(Xpos*Xpos+Ypos*Ypos) );
+    }
+    Xpos=c3*Xpos;
+    Ypos=c4*Ypos;
+    
+    stroke(couleurs.get(i+nb-k*ecart),0,0);
+    strokeWeight(3);
+    
+    Xpos=Xpos+width/2;
+    Ypos=Ypos+height/2;
+    
+    Xpos=width-Xpos;
+    
+    rotation=teta-alpha;
+    
+    pushMatrix();
+    
+    //translate(-290*rotation,height*rotation-40*rotation);
+    //translate(-700,0);
+    rotate(rotation);
+    point(Xpos,Ypos);
+    popMatrix();
+    
+    }
+   }
+  }
+  
+  nb+=lignes;
+  
+  if(Xpos<-100){
+    
+  nb=0;
+  
+  positionsX.clear();
+  positionsY.clear();
+  vitesseX.clear();
+  vitesseY.clear();
+  
+  for(int u=1;u<=lignes;u+=1){
+  positionsX.append(Xposbase);
+  positionsY.append(u*Yposbase);
+   }
+  }
+  
+  
+  
+  
+  
+  }
+  fill(255,0,0);
+  stroke(255,0,0);
+  translate(width/2,height/2);
+  line(width/4,0,3*width/4,0);
+  
+  dep+=vitesse;
+  if(dep>rayon+width/2+300){
+    dep=-width/2-rayon-250;
+  }
+  
+  stroke(0);
+  popMatrix();
+  
+  if(cos(alpha-teta)<=0.98 && second()%2==1){                            //Indicateur de décrochage au delà de 14 degrés
+    textSize(40);
+    text("STALL",69*width/100,105*height/1000);
+  } 
+  
+  
+  fill(255,0,0);
+  textSize(30);                                        //Afficher l'incidence
+  text("Incidence (deg) :",77*width/100,height/10);
+  text(-degrees(teta-alpha),9*width/10,height/10);
+  
+  fill(0);
+  text("Assiette (deg) :",77*width/100,3*height/20);           //Afficher l'assiette réelle
+  text(-degrees(teta),9*width/10,3*height/20);
+  
+  fill(0,0,255);
+  text("Assiette voulue (deg) :",29*width/40,5*height/20);    //Afficher l'assiette demandée
+  text(-degrees(t),9*width/10,5*height/20);
+  
+  
+  
+  if(keyPressed == true && cos(t-teta)>0.80){              //Action des touches
+    
+    if(key=='z'){
+      if(t-0.01>-1.57075){
+        t-=0.01;
+      }
+    }
+    
+    if(key=='s'){
+      if(t+0.01<1.57075){
+        t+=0.01;
+      }  
+    }
+  }
+  
+  if(mousePressed && 93*width/100<mouseX && mouseX<97*width/100 && mouseY>25*height/30-height/10 && mouseY<25*height/30+height/10){
+    if(curseurY!=mouseY){
+      nb=0;
+  
+  positionsX.clear();
+  positionsY.clear();
+  vitesseX.clear();
+  vitesseY.clear();
+  
+  for(int u=1;u<=lignes;u+=1){
+  positionsX.append(Xposbase);
+  positionsY.append(u*Yposbase);
+   }
+    }
+    curseurY=mouseY;
+                                               //Action curseur
+    lignes=int((height-curseurY))/2;
+    ok=1;
+    couleur=255;
+    if(curseurY>=25*height/30+height/10-10){
+      ok=0;
+      couleur=0;
+    }
+  
+  }
+  
+  if(ok==1){
+  alpha=teta;
+  }
+  
+  
+  
+  rectMode(CENTER);
+  strokeWeight(5);                                       //Affichage curseur écoulement
+  fill(200,255,200);
+  rect(95*width/100,25*height/30,width/500,height/5);
+  fill(couleur,100,100);
+  noStroke();
+  ellipse(95*width/100,curseurY,width/50,width/50);
+  fill(0,100,100);                                                                  //Affichage textes
+  text("Touches z et s pour contrôler l'assiette",width/80,95*height/100);
+  text("Afficher l'écoulement (désactive le retard d'incidence) ->",48*width/100,95*height/100);
+  textAlign(CENTER);
+  textSize(40);
+  text("Projet Automatisation et stabilisation d'une aile volante",width/2,height/23); 
+  textAlign(LEFT);
+  textSize(20);
+  text("ZBAIRI Houssen",width/100,12*height/100);
+  
+}

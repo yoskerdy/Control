@@ -1,0 +1,1 @@
+To run the program, you should copy it into a Processing IDE.
